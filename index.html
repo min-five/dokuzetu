@@ -63,6 +63,7 @@
       font-size: 0.88rem;
       text-align: left;
       margin-bottom: 8px;
+      cursor: pointer;
     }
     .stats {
       background: #110f1c;
@@ -86,7 +87,7 @@
   <div id="view-start">
     <div class="icon">🔥</div>
     <h1>あなたのネット生態、<br><span class="accent">ズバリ暴きます</span></h1>
-    <p class="desc">容赦ない毒舌アルゴリズムで痛い実態を判定。<br>質問に直感でお答えください。</p>
+    <p class="desc">容赦ない毒舌で痛い実態を判定。<br>質問に直感でお答えください。</p>
     <button class="btn btn-main" onclick="start()">診断をはじめる</button>
   </div>
 
@@ -115,7 +116,7 @@
 
 <script>
 const qs = [
-  { q: "深夜2時にSNSを開いたら？", a: [["意味深ポストして即消す", [30, 10, 20]], ["無心でTLを巡回する", [5, 10, 30]], ["界隈にお気持ち投下", [30, 30, 10]]] },
+  { q: "深夜2時にSNSを開いたら？", a: [["意味深ポストして即消す", [30, 10, 20]], ["無心で画面をスクロールする", [5, 10, 30]], ["界隈にお気持ち投下", [30, 30, 10]]] },
   { q: "他人の実績自慢を見たら？", a: [["粗探しをして内心見下す", [20, 30, 10]], ["秒速でミュート", [10, 15, 25]], ["対抗して盛った投稿をする", [30, 10, 15]]] },
   { q: "作業・ゲームで負けた時は？", a: [["「味方が弱すぎた」", [20, 30, 20]], ["「設定変えたせいだな」", [15, 10, 25]], ["無言で即ふて寝", [5, 10, 30]]] },
   { q: "PC開いて30分後の状態は？", a: [["YouTube見てる", [5, 10, 30]], ["ツールの設定いじり", [20, 10, 25]], ["「作業する」と宣言したきり", [30, 5, 25]]] }
@@ -124,7 +125,10 @@ const qs = [
 const resList = [
   { t: "承認欲求の亡霊", d: "投稿して5分おきにいいね数見てませんか？実績盛る前にまず作業終わらせなさい。", ico: "👻" },
   { t: "陰湿ネット論客", d: "粗探しして正論パンチ打つ瞬間が一番脳汁出てそう。その鋭い観察眼を自分の生活に向けましょう。", ico: "👾" },
-  { t: "現実逃避マスター", d: "「明日から本気出す」を繰り返して今年終わりそう。まずその手元のブラウザを閉じなさい。", ico: "🛌" }
+  { t: "現実逃避マスター", d: "「明日から本気出す」を繰り返して今年終わりそう。まずその手元のブラウザを閉じなさい。", ico: "🛌" },
+  { t: "形から入る口先モンスター", d: "環境設定やツール集めだけで満足して作品が1個も完成していません。まず手を動かしてください。", ico: "🛠️" },
+  { t: "無敵のネットお気持ち係", d: "他人の言動にいちいち突っかからないと気が済まない病気です。一度スマホを置いて散歩に行きましょう。", ico: "💢" },
+  { t: "無気力ROM専ゾンビ", d: "何も発信しないくせに他人の動向だけは24時間監視中。タイムライン眺めても人生は1ミリも進みません。", ico: "🧟" }
 ];
 
 let idx = 0, score = [0, 0, 0];
@@ -139,7 +143,7 @@ function start() { idx = 0; score = [0, 0, 0]; show('view-quiz'); nextQ(); }
 
 function nextQ() {
   const item = qs[idx];
-  $('q-step').textContent = `Q${idx + 1} / ${qs.length}`;
+  $('q-step').textContent = `質問 ${idx + 1}問目`;
   $('q-txt').textContent = item.q;
   $('q-opts').innerHTML = item.a.map((opt, i) => 
     `<button class="btn btn-choice" onclick="ans(${i})">${opt[0]}</button>`
@@ -153,18 +157,29 @@ function ans(i) {
 }
 
 function calc() {
-  const max = score.indexOf(Math.max(...score));
+  const [ego, shadow, escape] = score;
+  let resIdx = 0;
+
+  // スコアの組み合わせに応じた判定
+  if (ego >= 80 && escape >= 70) resIdx = 3;       // 形から入る口先モンスター
+  else if (shadow >= 70 && ego >= 60) resIdx = 4;   // 無敵のネットお気持ち係
+  else if (escape >= 90 && ego <= 40) resIdx = 5;   // 無気力ROM専ゾンビ
+  else {
+    resIdx = score.indexOf(Math.max(...score));     // 亡霊(0), 論客(1), 現実逃避(2)
+  }
+
+  const res = resList[resIdx];
   const sum = score.reduce((a, b) => a + b, 0);
   const p = score.map(v => Math.min(99, Math.round((v / sum) * 100) + 5));
 
-  $('res-icon').textContent = resList[max].ico;
-  $('res-title').textContent = resList[max].t;
-  $('res-desc').textContent = resList[max].d;
+  $('res-icon').textContent = res.ico;
+  $('res-title').textContent = res.t;
+  $('res-desc').textContent = res.d;
   $('s-ego').textContent = `${p[0]}%`;
   $('s-shadow').textContent = `${p[1]}%`;
   $('s-escape').textContent = `${p[2]}%`;
 
-  const txt = `【SNSロースト診断】私の生態は『${resList[max].t}』でした。\n承認欲求: ${p[0]}% / ネット弁慶: ${p[1]}% / 現実逃避: ${p[2]}%\n#SNSロースト診断`;
+  const txt = `【SNSロースト診断】私の生態は『${res.t}』でした。\n承認欲求: ${p[0]}% / ネット弁慶: ${p[1]}% / 現実逃避: ${p[2]}%\n#SNSロースト診断`;
   $('btn-share').href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(txt)}&url=${encodeURIComponent(location.href)}`;
   show('view-res');
 }
